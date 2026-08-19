@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Sidebar } from '@/components/sidebar';
 import { getAdminDeliveries } from '@/lib/api';
-import { Truck, MapPin, CheckCircle2, Clock, ChefHat } from 'lucide-react';
+import { Truck, MapPin, CheckCircle2, ChefHat } from 'lucide-react';
 
 interface AreaDeliverySummary {
   area: string;
@@ -62,45 +62,46 @@ export default function AdminDeliveriesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {deliveries.map((item, i) => (
-            <div key={i} className="bg-stone-800 border border-stone-700/80 rounded-3xl p-6 shadow-md">
-              <div className="flex items-center justify-between border-b border-stone-700 pb-4 mb-4">
-                <div className="flex items-center space-x-2 text-white font-bold text-lg font-serif">
-                  <MapPin className="w-5 h-5 text-brand-400" />
-                  <span>{item.area}</span>
+              <div key={i} className="bg-stone-800 border border-stone-700/80 rounded-3xl p-6 shadow-md">
+                <div className="flex items-center justify-between border-b border-stone-700 pb-4 mb-4">
+                  <div className="flex items-center space-x-2 text-white font-bold text-lg font-serif">
+                    <MapPin className="w-5 h-5 text-brand-400" />
+                    <span>{item.area}</span>
+                  </div>
+                  <span className="bg-brand-900 text-brand-300 font-extrabold text-xs px-3 py-1 rounded-full border border-brand-700">
+                    {item.total_orders} Orders
+                  </span>
                 </div>
-                <span className="bg-brand-900 text-brand-300 font-extrabold text-xs px-3 py-1 rounded-full border border-brand-700">
-                  {item.total_orders} Orders
-                </span>
+
+                <div className="space-y-3 text-xs">
+                  <div className="flex items-center justify-between p-3 bg-stone-900 rounded-xl border border-stone-700">
+                    <div className="flex items-center space-x-2 text-emerald-400 font-semibold">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Delivered & Confirmed</span>
+                    </div>
+                    <span className="font-extrabold text-white text-sm">{item.delivered}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-stone-900 rounded-xl border border-stone-700">
+                    <div className="flex items-center space-x-2 text-orange-400 font-semibold">
+                      <Truck className="w-4 h-4" />
+                      <span>Out for Delivery</span>
+                    </div>
+                    <span className="font-extrabold text-white text-sm">{item.out_for_delivery}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-stone-900 rounded-xl border border-stone-700">
+                    <div className="flex items-center space-x-2 text-amber-400 font-semibold">
+                      <ChefHat className="w-4 h-4" />
+                      <span>Kitchen Preparing</span>
+                    </div>
+                    <span className="font-extrabold text-white text-sm">{item.preparing}</span>
+                  </div>
+                </div>
               </div>
-
-              <div className="space-y-3 text-xs">
-                <div className="flex items-center justify-between p-3 bg-stone-900 rounded-xl border border-stone-750">
-                  <div className="flex items-center space-x-2 text-emerald-400 font-semibold">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Delivered & Confirmed</span>
-                  </div>
-                  <span className="font-extrabold text-white text-sm">{item.delivered}</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-stone-900 rounded-xl border border-stone-750">
-                  <div className="flex items-center space-x-2 text-orange-400 font-semibold">
-                    <Truck className="w-4 h-4" />
-                    <span>Out for Delivery</span>
-                  </div>
-                  <span className="font-extrabold text-white text-sm">{item.out_for_delivery}</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-stone-900 rounded-xl border border-stone-750">
-                  <div className="flex items-center space-x-2 text-amber-400 font-semibold">
-                    <ChefHat className="w-4 h-4" />
-                    <span>Kitchen Preparing</span>
-                  </div>
-                  <span className="font-extrabold text-white text-sm">{item.preparing}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );
