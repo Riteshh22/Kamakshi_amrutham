@@ -8,7 +8,7 @@ import { Feedback, CreateFeedbackInput } from '@/types/feedback';
 import { Complaint, CreateComplaintInput, UpdateComplaintStatusInput } from '@/types/complaint';
 import { Notification } from '@/types/notification';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://kamakshi-amrutham.onrender.com';
 
 class APIError extends Error {
   status: number;

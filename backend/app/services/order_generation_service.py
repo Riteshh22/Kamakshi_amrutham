@@ -62,7 +62,7 @@ class OrderGenerationService:
                     "date": today_str,
                     "status": "pending",
                     "received_status": False,
-                    "delivery_address": profile.get("delivery_address", "Saved Address"),
+                    "delivery_address": profile.get("full_address") or profile.get("delivery_address", "Saved Address"),
                     "area": profile.get("area", "Kukatpally"),
                 }
 

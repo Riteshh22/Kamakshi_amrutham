@@ -33,7 +33,7 @@ async def register(body: RegisterRequest):
             "full_name": body.full_name,
             "email": body.email,
             "phone": body.phone,
-            "delivery_address": body.delivery_address,
+            "full_address": body.delivery_address,
             "area": body.area,
             "pincode": body.pincode,
             "role": "customer"

@@ -9,6 +9,8 @@ class AuthService:
     @staticmethod
     def update_profile(user_id: str, updates: dict) -> dict:
         filtered = {k: v for k, v in updates.items() if v is not None}
+        if "delivery_address" in filtered:
+            filtered["full_address"] = filtered.pop("delivery_address")
         res = supabase.from_("Profiles").update(filtered).eq("id", user_id).execute()
         return res.data[0] if res.data else {}
 

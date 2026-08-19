@@ -45,6 +45,8 @@ async def update_profile(body: ProfileUpdate, current_user: dict = Depends(get_c
     logger.info(f"[PUT /api/profile] Updating Profiles for user_id={user_id}")
 
     updates = {k: v for k, v in body.model_dump(exclude_unset=True).items() if v is not None}
+    if "delivery_address" in updates:
+        updates["full_address"] = updates.pop("delivery_address")
 
     try:
         res = supabase.from_("Profiles").update(updates).eq("id", user_id).execute()

@@ -85,7 +85,7 @@ function RegisterForm() {
           full_name: formData.fullName,
           email: formData.email,
           phone: formData.phone,
-          delivery_address: formData.deliveryAddress,
+          full_address: formData.deliveryAddress,
           area: formData.area,
           pincode: formData.pincode,
           role: 'customer',
