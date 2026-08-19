@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ShieldCheck, AlertCircle, Mail, ArrowRight, Loader2 } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://kamakshi-amrutham.onrender.com';
+const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 export default function AdminLoginPage() {
   const router = useRouter();
