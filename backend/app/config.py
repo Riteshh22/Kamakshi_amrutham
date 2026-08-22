@@ -16,6 +16,8 @@ class Settings:
             return [origin.strip() for origin in env_origins.split(",") if origin.strip()]
         return [
             "https://kamakshi-amrutham-9ah1.vercel.app",
+            "https://kamakshi-amrutham.vercel.app",
+            "https://kamakshi-amrutham.onrender.com",
             "http://localhost:3000",
             "http://127.0.0.1:3000",
         ]

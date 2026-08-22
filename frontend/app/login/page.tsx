@@ -4,7 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { UtensilsCrossed, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { loginCustomer } from '@/lib/api';
+import { Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function CustomerLoginPage() {
   const router = useRouter();
@@ -21,30 +22,58 @@ export default function CustomerLoginPage() {
     try {
       setLoading(true);
 
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email,
+      // Primary flow: call backend login endpoint
+      const authRes = await loginCustomer({
+        email: email.trim().toLowerCase(),
         password,
       });
 
-      if (authError) throw authError;
-
-      const user = data.user;
-      if (user) {
-        // Fetch role from "Profiles"
-        const { data: profile } = await supabase
-          .from('Profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-
-        if (profile?.role === 'admin') {
-          router.push('/admin/dashboard');
-        } else {
-          router.push('/customer/dashboard');
+      // If backend returned access_token and refresh_token, establish Supabase session
+      if (authRes.access_token && authRes.refresh_token && supabase?.auth) {
+        try {
+          await supabase.auth.setSession({
+            access_token: authRes.access_token,
+            refresh_token: authRes.refresh_token,
+          });
+        } catch (sessionErr) {
+          console.warn('Supabase setSession note:', sessionErr);
         }
+      } else if (authRes.access_token && supabase?.auth) {
+        try {
+          await supabase.auth.setSession({
+            access_token: authRes.access_token,
+            refresh_token: authRes.access_token,
+          });
+        } catch (sessionErr) {
+          console.warn('Supabase setSession note:', sessionErr);
+        }
+      }
+
+      // Authoritative redirect based on role returned from server
+      if (authRes.role === 'admin') {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/customer/dashboard');
       }
     } catch (err: any) {
       console.error('Login error:', err);
+      // Fallback: If backend is momentarily unreachable, try direct Supabase auth
+      try {
+        if (supabase?.auth) {
+          const { data, error: sbError } = await supabase.auth.signInWithPassword({
+            email: email.trim().toLowerCase(),
+            password,
+          });
+          if (sbError) throw sbError;
+          if (data?.user) {
+            router.push('/customer/dashboard');
+            return;
+          }
+        }
+      } catch (fallbackErr: any) {
+        console.warn('Supabase fallback error:', fallbackErr);
+      }
+
       setError(err.message || 'Invalid email or password. Please try again.');
     } finally {
       setLoading(false);
@@ -54,21 +83,24 @@ export default function CustomerLoginPage() {
   return (
     <div className="min-h-screen bg-cream-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <Link href="/" className="inline-flex items-center space-x-3 mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-brand-600 text-white flex items-center justify-center font-bold shadow-md">
-            <UtensilsCrossed className="w-6 h-6" />
+        <Link href="/" className="inline-flex items-center space-x-3 mb-4 group">
+          <div
+            className="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-2xl shadow-warm group-hover:scale-105 transition-transform"
+            style={{ background: 'linear-gradient(135deg, #8B1A2A, #C9952A)' }}
+          >
+            🍚
           </div>
         </Link>
-        <h2 className="text-3xl font-extrabold text-stone-900 font-serif">
+        <h1 className="text-3xl font-extrabold text-stone-900 font-serif">
           Customer Login
-        </h2>
-        <p className="mt-2 text-xs text-stone-600">
+        </h1>
+        <p className="mt-2 text-xs text-stone-600 font-medium">
           Sign in to manage your meal subscription & daily deliveries
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 shadow-xl border border-stone-200 sm:rounded-3xl sm:px-10">
+        <div className="bg-white py-8 px-6 shadow-warm-lg border border-stone-100 sm:rounded-3xl sm:px-10">
           
           {error && (
             <div className="mb-6 bg-red-50 border border-red-200 text-red-700 p-4 rounded-2xl text-xs flex items-center space-x-2">
@@ -118,9 +150,17 @@ export default function CustomerLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center space-x-2"
+              className="w-full text-white font-bold py-3.5 px-4 rounded-xl shadow-warm transition-all flex items-center justify-center space-x-2 hover:opacity-95"
+              style={{ background: 'linear-gradient(135deg, #8B1A2A, #731524)' }}
             >
-              <span>{loading ? 'Signing in...' : 'Sign In'}</span>
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                <span>Sign In</span>
+              )}
             </button>
           </form>
 

@@ -15,7 +15,7 @@ import {
 import { SubscriptionPlan, Subscription } from '@/types/subscription';
 import { SubscriptionPause } from '@/types/subscription-pause';
 import { formatDate, formatCurrency } from '@/lib/utils';
-import { CalendarCheck, PauseCircle, PlayCircle, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { PauseCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function CustomerSubscriptionPage() {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
@@ -40,45 +40,28 @@ export default function CustomerSubscriptionPage() {
   const loadData = async () => {
     try {
       setLoading(true);
+      // Fetch plans strictly from the database via backend API
       const [plansData, subData] = await Promise.all([
-        getPlans().catch(() => [
-          {
-            id: 'daily',
-            name: 'Daily Plan',
-            price: 219,
-            duration_days: 1,
-            description: 'Single day meal plan.',
-            features: ['Pure veg meal', 'Mid-day delivery'],
-          },
-          {
-            id: 'monthly',
-            name: 'Monthly Plan',
-            price: 5500,
-            duration_days: 30,
-            description: '30 Days complete lunch plan.',
-            features: ['30 Days lunch', 'Pause & skip enabled', 'Daily menu variety'],
-          },
-          {
-            id: 'quarterly',
-            name: '3 Months Plan',
-            price: 15000,
-            duration_days: 90,
-            description: '90 Days long-term value plan.',
-            features: ['90 Days lunch', 'Maximum savings', 'Festive specials'],
-          },
-        ]),
-        getCurrentSubscription().catch(() => null),
+        getPlans().catch((err) => {
+          console.error('Failed to load plans from database:', err);
+          return [];
+        }),
+        getCurrentSubscription().catch((err) => {
+          console.error('Failed to load current subscription:', err);
+          return null;
+        }),
       ]);
 
       setPlans(plansData);
       setCurrentSub(subData);
 
-      if (subData) {
+      if (subData?.id) {
         const pauseList = await getSubscriptionPauses(subData.id).catch(() => []);
         setPauses(pauseList);
       }
     } catch (err: any) {
       console.error('Subscription page load error:', err);
+      setMessage({ type: 'error', text: 'Unable to load subscription details. Please refresh.' });
     } finally {
       setLoading(false);
     }
@@ -181,108 +164,127 @@ export default function CustomerSubscriptionPage() {
           </div>
         )}
 
-        {/* Active Subscription Banner */}
-        {currentSub && (
-          <div className="mb-10 bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-100 pb-6 mb-6">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-brand-700">
-                  Current Active Plan
-                </span>
-                <h2 className="text-2xl font-bold text-stone-900 font-serif mt-1">
-                  {currentSub.plan?.name || 'Monthly Subscription'}
-                </h2>
-              </div>
-              <div className="flex items-center space-x-3">
-                <span className="bg-emerald-100 text-emerald-800 text-xs font-extrabold px-3 py-1 rounded-full uppercase">
-                  {currentSub.status}
-                </span>
-                <button
-                  onClick={() => setShowPauseModal(true)}
-                  className="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold px-4 py-2 rounded-xl transition-colors flex items-center space-x-1.5"
-                >
-                  <PauseCircle className="w-4 h-4" />
-                  <span>Pause Delivery Dates</span>
-                </button>
-              </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="flex flex-col items-center space-y-3">
+              <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
+              <p className="text-xs text-stone-500 font-medium">Loading subscription plans...</p>
             </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-stone-700 text-xs">
-              <div>
-                <span className="text-stone-400 block font-medium">Price</span>
-                <span className="font-bold text-stone-900 text-base">
-                  {formatCurrency(currentSub.plan?.price || 5500)}
-                </span>
-              </div>
-              <div>
-                <span className="text-stone-400 block font-medium">Start Date</span>
-                <span className="font-bold text-stone-900">{formatDate(currentSub.start_date)}</span>
-              </div>
-              <div>
-                <span className="text-stone-400 block font-medium">Expiry Date</span>
-                <span className="font-bold text-stone-900">{formatDate(currentSub.end_date)}</span>
-              </div>
-              <div>
-                <span className="text-stone-400 block font-medium">Pause Feature</span>
-                <span className="font-bold text-emerald-700">Active & Available</span>
-              </div>
-            </div>
-
-            {/* Scheduled Pauses */}
-            {pauses.length > 0 && (
-              <div className="mt-6 pt-6 border-t border-stone-100">
-                <h4 className="text-xs font-bold text-stone-700 uppercase tracking-wider mb-3">
-                  Scheduled Subscription Pauses
-                </h4>
-                <div className="space-y-2">
-                  {pauses.map((p) => (
-                    <div
-                      key={p.id}
-                      className="p-3 bg-amber-50 rounded-xl border border-amber-200 flex items-center justify-between text-xs text-amber-900"
+          </div>
+        ) : (
+          <>
+            {/* Active Subscription Banner */}
+            {currentSub && (
+              <div className="mb-10 bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-100 pb-6 mb-6">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-brand-700">
+                      Current Active Plan
+                    </span>
+                    <h2 className="text-2xl font-bold text-stone-900 font-serif mt-1">
+                      {currentSub.plan?.name || 'Active Subscription'}
+                    </h2>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="bg-emerald-100 text-emerald-800 text-xs font-extrabold px-3 py-1 rounded-full uppercase">
+                      {currentSub.status}
+                    </span>
+                    <button
+                      onClick={() => setShowPauseModal(true)}
+                      className="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold px-4 py-2 rounded-xl transition-colors flex items-center space-x-1.5"
                     >
-                      <div>
-                        <span className="font-bold">
-                          {formatDate(p.start_date)} – {formatDate(p.end_date)}
-                        </span>
-                        {p.reason && <span className="ml-2 text-amber-700">({p.reason})</span>}
-                      </div>
-                      <button
-                        onClick={() => handleResumePause(p.id)}
-                        disabled={actionLoading}
-                        className="text-stone-700 font-bold hover:underline"
-                      >
-                        Remove Pause
-                      </button>
-                    </div>
-                  ))}
+                      <PauseCircle className="w-4 h-4" />
+                      <span>Pause Delivery Dates</span>
+                    </button>
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-stone-700 text-xs">
+                  <div>
+                    <span className="text-stone-400 block font-medium">Price</span>
+                    <span className="font-bold text-stone-900 text-base">
+                      {currentSub.plan?.price != null ? formatCurrency(currentSub.plan.price) : '—'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-stone-400 block font-medium">Start Date</span>
+                    <span className="font-bold text-stone-900">{formatDate(currentSub.start_date)}</span>
+                  </div>
+                  <div>
+                    <span className="text-stone-400 block font-medium">Expiry Date</span>
+                    <span className="font-bold text-stone-900">{formatDate(currentSub.end_date)}</span>
+                  </div>
+                  <div>
+                    <span className="text-stone-400 block font-medium">Pause Feature</span>
+                    <span className="font-bold text-emerald-700">Active & Available</span>
+                  </div>
+                </div>
+
+                {/* Scheduled Pauses */}
+                {pauses.length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-stone-100">
+                    <h3 className="text-xs font-bold text-stone-700 uppercase tracking-wider mb-3">
+                      Scheduled Subscription Pauses
+                    </h3>
+                    <div className="space-y-2">
+                      {pauses.map((p) => (
+                        <div
+                          key={p.id}
+                          className="p-3 bg-amber-50 rounded-xl border border-amber-200 flex items-center justify-between text-xs text-amber-900"
+                        >
+                          <div>
+                            <span className="font-bold">
+                              {formatDate(p.start_date)} – {formatDate(p.end_date)}
+                            </span>
+                            {p.reason && <span className="ml-2 text-amber-700">({p.reason})</span>}
+                          </div>
+                          <button
+                            onClick={() => handleResumePause(p.id)}
+                            disabled={actionLoading}
+                            className="text-stone-700 font-bold hover:underline"
+                          >
+                            Remove Pause
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
-          </div>
+
+            {/* Subscription Plans Selection */}
+            <div className="mb-8">
+              <h2 className="text-xl font-bold text-stone-900 font-serif mb-2">
+                Available Subscription Plans
+              </h2>
+              <p className="text-xs text-stone-500 mb-6">
+                Choose or switch your vegetarian meal plan
+              </p>
+
+              {plans.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+                  {plans.map((plan) => (
+                    <SubscriptionCard
+                      key={plan.id}
+                      plan={plan}
+                      isPopular={plan.id.toLowerCase().includes('month') || plan.name.toLowerCase().includes('month')}
+                      isActive={currentSub?.plan_id === plan.id}
+                      onSubscribe={handleSubscribe}
+                      loading={actionLoading}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white rounded-3xl p-8 border border-stone-200 text-center">
+                  <AlertCircle className="w-8 h-8 text-stone-400 mx-auto mb-3" />
+                  <p className="text-sm font-semibold text-stone-700">No active plans found in the system.</p>
+                  <p className="text-xs text-stone-500 mt-1">Please check back later or contact customer support.</p>
+                </div>
+              )}
+            </div>
+          </>
         )}
-
-        {/* Subscription Plans Selection */}
-        <div className="mb-8">
-          <h2 className="text-xl font-bold text-stone-900 font-serif mb-2">
-            Available Subscription Plans
-          </h2>
-          <p className="text-xs text-stone-500 mb-6">
-            Choose or switch your vegetarian meal plan
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-            {plans.map((plan) => (
-              <SubscriptionCard
-                key={plan.id}
-                plan={plan}
-                isPopular={plan.id === 'monthly'}
-                isActive={currentSub?.plan_id === plan.id}
-                onSubscribe={handleSubscribe}
-                loading={actionLoading}
-              />
-            ))}
-          </div>
-        </div>
 
         {/* Pause Modal */}
         {showPauseModal && (

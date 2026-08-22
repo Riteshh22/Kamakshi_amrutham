@@ -4,21 +4,18 @@ import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { UtensilsCrossed, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react';
+import { registerCustomer } from '@/lib/api';
+import { ArrowRight, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 
 const hyderabadAreas = [
-  'Kukatpally',
-  'Madhapur',
-  'Ameerpet',
+  'Nizampet',
+  'Bachupally',
+  'Mallampet',
+  'Pragati Nagar',
   'Miyapur',
-  'Gachibowli',
-  'Kondapur',
-  'Hitec City',
-  'Jubilee Hills',
-  'Banjara Hills',
-  'Begumpet',
-  'KPHB Colony',
-  'Manikonda',
+  'Vasanth Nagar',
+  'HMT Hills',
+  'Sardar Patel Nagar',
 ];
 
 // Inner component that uses useSearchParams — must be wrapped in Suspense
@@ -34,8 +31,8 @@ function RegisterForm() {
     password: '',
     confirmPassword: '',
     deliveryAddress: '',
-    area: 'Kukatpally',
-    pincode: '500072',
+    area: 'Nizampet',
+    pincode: '500090',
   });
 
   const [loading, setLoading] = useState(false);
@@ -63,45 +60,75 @@ function RegisterForm() {
     try {
       setLoading(true);
 
-      // 1. Supabase Auth signUp()
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
+      // Primary flow: call backend register API
+      const authRes = await registerCustomer({
+        email: formData.email.trim().toLowerCase(),
         password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-            role: 'customer', // Customer role strictly assigned
-          },
-        },
+        full_name: formData.fullName.trim(),
+        phone: formData.phone.trim(),
+        delivery_address: formData.deliveryAddress.trim(),
+        area: formData.area,
+        pincode: formData.pincode.trim(),
       });
 
-      if (authError) throw authError;
-
-      const user = authData.user;
-      if (user) {
-        // 2. Insert into "Profiles" table
-        const { error: profileError } = await supabase.from('Profiles').insert({
-          id: user.id,
-          full_name: formData.fullName,
-          email: formData.email,
-          phone: formData.phone,
-          full_address: formData.deliveryAddress,
-          area: formData.area,
-          pincode: formData.pincode,
-          role: 'customer',
-        });
-
-        if (profileError) {
-          console.warn('Profile insertion note:', profileError.message);
+      // If tokens returned, set Supabase session
+      if (authRes.access_token && authRes.refresh_token && supabase?.auth) {
+        try {
+          await supabase.auth.setSession({
+            access_token: authRes.access_token,
+            refresh_token: authRes.refresh_token,
+          });
+        } catch (sErr) {
+          console.warn('Supabase setSession note:', sErr);
         }
       }
 
       setSuccess(true);
       setTimeout(() => {
         router.push(`/customer/dashboard?subscribed_plan=${selectedPlan}`);
-      }, 1500);
+      }, 1200);
     } catch (err: any) {
       console.error('Registration error:', err);
+
+      // Fallback: direct Supabase signup
+      try {
+        if (supabase?.auth) {
+          const { data: authData, error: authError } = await supabase.auth.signUp({
+            email: formData.email.trim().toLowerCase(),
+            password: formData.password,
+            options: {
+              data: {
+                full_name: formData.fullName.trim(),
+                role: 'customer',
+              },
+            },
+          });
+
+          if (authError) throw authError;
+
+          if (authData?.user) {
+            await supabase.from('Profiles').insert({
+              id: authData.user.id,
+              full_name: formData.fullName.trim(),
+              email: formData.email.trim().toLowerCase(),
+              phone: formData.phone.trim(),
+              full_address: formData.deliveryAddress.trim(),
+              area: formData.area,
+              pincode: formData.pincode.trim(),
+              role: 'customer',
+            });
+
+            setSuccess(true);
+            setTimeout(() => {
+              router.push(`/customer/dashboard?subscribed_plan=${selectedPlan}`);
+            }, 1200);
+            return;
+          }
+        }
+      } catch (fallbackErr: any) {
+        console.warn('Supabase fallback signup error:', fallbackErr);
+      }
+
       setError(err.message || 'Failed to create account. Please try again.');
     } finally {
       setLoading(false);
@@ -111,9 +138,12 @@ function RegisterForm() {
   return (
     <div className="min-h-screen bg-cream-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <Link href="/" className="inline-flex items-center space-x-3 mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-brand-600 text-white flex items-center justify-center font-bold shadow-md">
-            <UtensilsCrossed className="w-6 h-6" />
+        <Link href="/" className="inline-flex items-center space-x-3 mb-4 group">
+          <div
+            className="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-2xl shadow-warm group-hover:scale-105 transition-transform"
+            style={{ background: 'linear-gradient(135deg, #8B1A2A, #C9952A)' }}
+          >
+            🍚
           </div>
         </Link>
         <h2 className="text-3xl font-extrabold text-stone-900 font-serif">

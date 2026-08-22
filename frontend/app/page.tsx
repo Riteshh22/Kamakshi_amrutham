@@ -1,8 +1,12 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Navbar } from '@/components/navbar';
+import { getPlans } from '@/lib/api';
+import { SubscriptionPlan } from '@/types/subscription';
+import { formatCurrency } from '@/lib/utils';
 import {
   MapPin,
   CheckCircle2,
@@ -14,6 +18,7 @@ import {
   ArrowRight,
   HelpCircle,
   Phone,
+  Loader2,
 } from 'lucide-react';
 
 /* ─────────────────── Data ─────────────────── */
@@ -24,27 +29,6 @@ const menuItems = [
   { name: 'Pappu', icon: '🫘', desc: 'Traditional Telugu lentil dal' },
   { name: 'Sambar', icon: '🍲', desc: 'Tamarind-spiced vegetable sambar' },
   { name: 'Pachdi', icon: '🥣', desc: 'Fresh homemade chutney & raita' },
-];
-
-const pricingPlans = [
-  {
-    id: 'single',
-    label: 'Single',
-    badge: null,
-    price: 229,
-    monthly: 6870,
-    color: 'border-stone-200',
-    highlight: false,
-  },
-  {
-    id: 'for2',
-    label: 'For 2 People',
-    badge: 'Best Value',
-    price: 259,
-    monthly: 7770,
-    color: 'border-brand-600',
-    highlight: true,
-  },
 ];
 
 const serviceAreas = [
@@ -121,6 +105,19 @@ const faqs = [
 /* ─────────────────── Component ─────────────────── */
 
 export default function LandingPage() {
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [loadingPlans, setLoadingPlans] = useState(true);
+
+  useEffect(() => {
+    getPlans()
+      .then((data) => setPlans(data || []))
+      .catch((err) => {
+        console.error('Error fetching plans on landing page:', err);
+        setPlans([]);
+      })
+      .finally(() => setLoadingPlans(false));
+  }, []);
+
   return (
     <div className="min-h-screen bg-cream-50">
       <Navbar />
@@ -367,86 +364,68 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            {pricingPlans.map((plan) => (
-              <div
-                key={plan.id}
-                className={`relative rounded-3xl border-2 overflow-hidden hover-lift ${
-                  plan.highlight ? 'border-brand-600 shadow-warm-lg' : 'border-stone-200 shadow-sm'
-                }`}
-              >
-                {plan.badge && (
-                  <div
-                    className="absolute top-0 right-0 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-2xl"
-                    style={{ background: 'linear-gradient(135deg, #8B1A2A, #C9952A)' }}
-                  >
-                    {plan.badge}
-                  </div>
-                )}
-
+          {loadingPlans ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
+            </div>
+          ) : plans.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              {plans.map((plan) => (
                 <div
-                  className={`px-8 py-8 ${plan.highlight ? 'bg-brand-50' : 'bg-white'}`}
+                  key={plan.id}
+                  className="relative rounded-3xl border-2 border-brand-600 bg-brand-50/40 p-8 shadow-warm hover-lift overflow-hidden flex flex-col justify-between"
                 >
-                  <h3 className="text-lg font-bold text-stone-900 font-serif mb-1">{plan.label}</h3>
-                  <p className="text-xs text-stone-400 mb-5">Per day · lunch delivery included</p>
+                  <div>
+                    <h3 className="text-xl font-bold text-stone-900 font-serif mb-1">{plan.name}</h3>
+                    <p className="text-xs text-stone-500 mb-5">{plan.description}</p>
 
-                  {/* Day price */}
-                  <div className="mb-2">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-extrabold text-stone-900 font-serif">
-                        ₹{plan.price}
-                      </span>
-                      <span className="text-sm text-stone-500">/day</span>
+                    <div className="mb-6">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-extrabold text-stone-900 font-serif">
+                          {formatCurrency(plan.price)}
+                        </span>
+                        <span className="text-sm text-stone-500">
+                          / {plan.duration_days === 1 ? 'day' : `${plan.duration_days} days`}
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Monthly price */}
-                  <div
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold mb-6 border"
-                    style={
-                      plan.highlight
-                        ? { background: '#fdf2f3', borderColor: '#f5c9ce', color: '#8B1A2A' }
-                        : { background: '#fefbf0', borderColor: '#fae8a6', color: '#a87520' }
-                    }
-                  >
-                    <span>Monthly Plan:</span>
-                    <span className="text-base">₹{plan.monthly.toLocaleString('en-IN')}</span>
+                    <ul className="space-y-2.5 mb-7">
+                      {plan.features?.map((f, i) => (
+                        <li key={i} className="flex items-start gap-2.5 text-sm text-stone-700">
+                          <CheckCircle2 className="w-4 h-4 text-forest-500 shrink-0 mt-0.5" />
+                          <span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-
-                  <ul className="space-y-2.5 mb-7">
-                    {[
-                      'Rice, Curry, Pappu, Sambar & Pachdi',
-                      'Fresh daily cooking — no reheating',
-                      'Free home delivery',
-                      'Lunch time delivery (12 PM – 1:30 PM)',
-                    ].map((f) => (
-                      <li key={f} className="flex items-start gap-2.5 text-sm text-stone-700">
-                        <CheckCircle2 className="w-4 h-4 text-forest-500 shrink-0 mt-0.5" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
 
                   <Link
-                    id={`pricing-cta-${plan.id}`}
-                    href="/register"
-                    className={`block w-full py-3.5 rounded-2xl font-bold text-sm text-center transition-all hover:opacity-90 hover:scale-[1.02] ${
-                      plan.highlight
-                        ? 'text-white shadow-warm'
-                        : 'bg-stone-900 text-white hover:bg-stone-800'
-                    }`}
-                    style={
-                      plan.highlight
-                        ? { background: 'linear-gradient(135deg, #8B1A2A, #731524)' }
-                        : {}
-                    }
+                    href={`/register?plan=${plan.id}`}
+                    className="block w-full py-3.5 rounded-2xl font-bold text-sm text-center text-white shadow-warm transition-all hover:opacity-90 hover:scale-[1.02]"
+                    style={{ background: 'linear-gradient(135deg, #8B1A2A, #731524)' }}
                   >
-                    Order Now
+                    Subscribe Now
                   </Link>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-cream-100 rounded-3xl p-8 border border-cream-300 text-center max-w-xl mx-auto">
+              <p className="text-stone-800 font-bold text-base font-serif">Pure Vegetarian Homemade Lunch Meals</p>
+              <p className="text-xs text-stone-600 mt-2">
+                Rice · Single Curry · Pappu · Sambar · Pachdi
+              </p>
+              <p className="text-xs text-brand-700 font-semibold mt-1">Lunch Meals Only · Free Home Delivery</p>
+              <Link
+                href="/register"
+                className="inline-block mt-5 text-white font-bold px-7 py-3 rounded-2xl text-xs shadow-warm transition-all hover:opacity-90 hover:scale-105"
+                style={{ background: 'linear-gradient(135deg, #8B1A2A, #731524)' }}
+              >
+                Register to Subscribe
+              </Link>
+            </div>
+          )}
 
           {/* Contact nudge */}
           <p className="text-center text-xs text-stone-400 mt-8">

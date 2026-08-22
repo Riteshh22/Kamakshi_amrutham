@@ -46,7 +46,8 @@ async def register(body: RegisterRequest):
             user_id=user.id,
             email=user.email,
             role="customer",
-            access_token=session.access_token if session else None
+            access_token=session.access_token if session else None,
+            refresh_token=session.refresh_token if session else None
         )
     except HTTPException:
         raise
@@ -76,7 +77,8 @@ async def login(body: LoginRequest):
             user_id=user.id,
             email=user.email,
             role=role,
-            access_token=session.access_token if session else None
+            access_token=session.access_token if session else None,
+            refresh_token=session.refresh_token if session else None
         )
     except HTTPException:
         raise

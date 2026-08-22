@@ -53,24 +53,23 @@ async def admin_verify_email(body: AdminEmailVerifyRequest):
     logger.info(f"[admin/verify-email] Found auth user: user_id={user_id} email={email}")
 
     # ── Step 2: Query public."Profiles" by UUID ──
+    profile_data = None
     try:
         profile_res = supabase.from_("Profiles").select("role").eq("id", user_id).single().execute()
-        logger.info(f"[admin/verify-email] Profiles query result: {profile_res.data}")
+        profile_data = profile_res.data if profile_res else None
+        logger.info(f"[admin/verify-email] Profiles query result: {profile_data}")
     except Exception as e:
-        logger.error(f"[admin/verify-email] Supabase Profiles query error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal error verifying admin status.",
-        )
+        logger.warning(f"[admin/verify-email] Supabase Profiles query error: {e}")
+        profile_data = None
 
-    if not profile_res.data:
+    if not profile_data:
         logger.warning(f"[admin/verify-email] No Profiles row found for user_id={user_id}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access Denied: You do not have administrator permissions.",
         )
 
-    role = profile_res.data.get("role")
+    role = profile_data.get("role")
     logger.info(f"[admin/verify-email] user_id={user_id} role='{role}'")
 
     # ── Step 3: Check role ──

@@ -172,10 +172,10 @@ export default function CustomerDashboardPage() {
               {subscription ? (
                 <div>
                   <h3 className="text-2xl font-bold text-stone-900 font-serif">
-                    {formatCurrency(subscription.plan?.price || 5500)}
+                    {subscription.plan?.price != null ? formatCurrency(subscription.plan.price) : 'Active'}
                   </h3>
                   <p className="text-sm font-semibold text-stone-700 mt-1">
-                    {subscription.plan?.name || 'Monthly Subscription'}
+                    {subscription.plan?.name || 'Active Plan'}
                   </p>
                   <p className="text-xs text-brand-700 font-bold mt-3">
                     ⏳ {getDaysRemaining()} days remaining

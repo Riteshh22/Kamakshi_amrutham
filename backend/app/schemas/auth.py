@@ -19,3 +19,4 @@ class AuthResponse(BaseModel):
     email: str
     role: str = "customer"
     access_token: Optional[str] = None
+    refresh_token: Optional[str] = None

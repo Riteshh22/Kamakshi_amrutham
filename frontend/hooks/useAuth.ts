@@ -29,6 +29,11 @@ export function useAuth() {
     // Immediately clear local state so the UI updates before Supabase responds
     setSession(null);
     setUser(null);
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('admin_access_token');
+      sessionStorage.removeItem('admin_user_id');
+      sessionStorage.removeItem('admin_email');
+    }
     try {
       await supabase.auth.signOut();
     } catch (err) {

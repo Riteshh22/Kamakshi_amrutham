@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { verifyAdminEmail } from '@/lib/api';
 import { ShieldCheck, AlertCircle, Mail, ArrowRight, Loader2 } from 'lucide-react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -20,19 +19,7 @@ export default function AdminLoginPage() {
 
     try {
       // POST to backend: email → auth.users UUID → Profiles.role check → signed JWT
-      const res = await fetch(`${API_URL}/api/admin/auth/verify-email`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase() }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        // Backend returns 403 with detail message for non-admin/not-found
-        setError(data.detail || 'Access Denied: You do not have administrator permissions.');
-        return;
-      }
+      const data = await verifyAdminEmail(email.trim().toLowerCase());
 
       // Store the backend-signed admin session token
       sessionStorage.setItem('admin_access_token', data.access_token);
@@ -42,7 +29,7 @@ export default function AdminLoginPage() {
       router.push('/admin/dashboard');
     } catch (err: any) {
       console.error('Admin login error:', err);
-      setError('Unable to connect to the server. Please try again.');
+      setError(err.message || 'Access Denied: You do not have administrator permissions.');
     } finally {
       setLoading(false);
     }

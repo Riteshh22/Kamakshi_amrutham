@@ -88,6 +88,53 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
 }
 
 // -------------------------------------------------------------
+// AUTH APIs
+// -------------------------------------------------------------
+export interface AuthResponse {
+  user_id: string;
+  email: string;
+  role: 'customer' | 'admin';
+  access_token?: string | null;
+  refresh_token?: string | null;
+}
+
+export interface AdminAuthResponse {
+  access_token: string;
+  token_type: string;
+  user_id: string;
+  email: string;
+}
+
+export async function loginCustomer(credentials: { email: string; password: string }): Promise<AuthResponse> {
+  return apiFetch<AuthResponse>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(credentials),
+  });
+}
+
+export async function registerCustomer(data: {
+  email: string;
+  password: string;
+  full_name: string;
+  phone: string;
+  delivery_address: string;
+  area: string;
+  pincode: string;
+}): Promise<AuthResponse> {
+  return apiFetch<AuthResponse>('/api/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function verifyAdminEmail(email: string): Promise<AdminAuthResponse> {
+  return apiFetch<AdminAuthResponse>('/api/admin/auth/verify-email', {
+    method: 'POST',
+    body: JSON.stringify({ email: email.trim().toLowerCase() }),
+  });
+}
+
+// -------------------------------------------------------------
 // PROFILE APIs
 // -------------------------------------------------------------
 export async function getProfile(): Promise<UserProfile> {
