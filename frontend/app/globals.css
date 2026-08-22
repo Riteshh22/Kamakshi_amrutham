@@ -2,15 +2,91 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Noto+Serif+Telugu:wght@400;600;700&display=swap');
+
 :root {
   --font-sans: 'Plus Jakarta Sans', sans-serif;
   --font-serif: 'Playfair Display', serif;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: var(--font-sans);
+  background-color: #FFFDF8;
+  color: #1c1917;
 }
 
 .font-serif {
   font-family: var(--font-serif);
+}
+
+/* Decorative border pattern for traditional Indian feel */
+.border-rangoli {
+  border-image: repeating-linear-gradient(
+    45deg,
+    #8B1A2A,
+    #8B1A2A 4px,
+    #C9952A 4px,
+    #C9952A 8px
+  ) 4;
+}
+
+/* Subtle warm section separator */
+.divider-gold {
+  height: 2px;
+  background: linear-gradient(to right, transparent, #C9952A55, transparent);
+}
+
+/* Floating badge */
+.badge-traditional {
+  background: linear-gradient(135deg, #8B1A2A, #C9952A);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+}
+
+/* Pricing card highlight */
+.pricing-popular {
+  background: linear-gradient(145deg, #8B1A2A 0%, #731524 100%);
+}
+
+/* Smooth hover lift */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(139, 26, 42, 0.15);
+}
+
+/* Section ornament */
+.section-ornament {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #C9952A;
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.section-ornament::before,
+.section-ornament::after {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 1.5px;
+  background: #C9952A;
+  border-radius: 9999px;
 }

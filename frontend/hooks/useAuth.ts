@@ -26,7 +26,15 @@ export function useAuth() {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    // Immediately clear local state so the UI updates before Supabase responds
+    setSession(null);
+    setUser(null);
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      // Silently ignore network errors — local state is already cleared
+      console.warn('Supabase signOut error (session cleared locally):', err);
+    }
   };
 
   return {

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useUser } from '@/hooks/useUser';
 import {
@@ -18,7 +18,6 @@ import {
   LogOut,
   ChevronRight,
   ShieldAlert,
-  UtensilsCrossed,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -28,8 +27,14 @@ interface SidebarProps {
 
 export function Sidebar({ mode }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { signOut } = useAuth();
   const { profile } = useUser();
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/');
+  };
 
   const customerLinks = [
     { name: 'Dashboard', href: '/customer/dashboard', icon: LayoutDashboard },
@@ -58,17 +63,43 @@ export function Sidebar({ mode }: SidebarProps) {
     <aside className="w-64 bg-white border-r border-stone-200 min-h-screen flex flex-col justify-between p-4 hidden md:flex">
       <div>
         {/* Brand Header */}
-        <div className="mb-8 px-2 pt-2 flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-md">
-            <UtensilsCrossed className="w-5 h-5" />
+        <div className="mb-8 px-2 pt-2">
+          <div className="flex items-center gap-2 mb-2">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shadow-sm shrink-0"
+              style={{ background: 'linear-gradient(145deg, #8B1A2A 0%, #5e111d 100%)' }}
+            >
+              🍚
+            </div>
+            <div className="leading-none">
+              <span
+                className="block font-extrabold font-serif"
+                style={{
+                  fontSize: '0.95rem',
+                  background: 'linear-gradient(135deg, #8B1A2A 20%, #C9952A 80%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  lineHeight: 1.2,
+                }}
+              >
+                Kamakshi Amrutham
+              </span>
+              <span
+                className="inline-flex items-center gap-0.5 mt-0.5 px-1.5 py-0.5 rounded-full text-white font-bold uppercase tracking-widest"
+                style={{
+                  fontSize: '0.5rem',
+                  background: 'linear-gradient(135deg, #8B1A2A 0%, #C9952A 100%)',
+                }}
+              >
+                ✦ Amma Chethi Ruchulu ✦
+              </span>
+            </div>
           </div>
-          <div>
-            <h1 className="font-bold text-stone-900 leading-tight font-serif text-lg">
-              Kamakshi Amrutham
-            </h1>
-            <span className="text-[10px] uppercase font-bold text-brand-700 tracking-wider">
-              {mode === 'admin' ? 'Admin Portal' : 'Customer Portal'}
-            </span>
+          <div
+            className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full text-center"
+            style={{ background: '#fdf2f3', color: '#8B1A2A' }}
+          >
+            {mode === 'admin' ? '⚙ Admin Portal' : '👤 Customer Portal'}
           </div>
         </div>
 
@@ -85,15 +116,19 @@ export function Sidebar({ mode }: SidebarProps) {
                 className={cn(
                   'flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-150',
                   isActive
-                    ? 'bg-brand-50 text-brand-700 font-semibold border border-brand-200/60 shadow-xs'
+                    ? 'font-semibold border shadow-xs'
                     : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
                 )}
+                style={isActive ? { background: '#fdf2f3', color: '#8B1A2A', borderColor: '#f5c9ce' } : {}}
               >
                 <div className="flex items-center space-x-3">
-                  <Icon className={cn('w-4 h-4', isActive ? 'text-brand-600' : 'text-stone-400')} />
+                  <Icon
+                    className={cn('w-4 h-4', isActive ? '' : 'text-stone-400')}
+                    style={isActive ? { color: '#8B1A2A' } : {}}
+                  />
                   <span>{link.name}</span>
                 </div>
-                {isActive && <ChevronRight className="w-3.5 h-3.5 text-brand-600" />}
+                {isActive && <ChevronRight className="w-3.5 h-3.5" style={{ color: '#8B1A2A' }} />}
               </Link>
             );
           })}
@@ -103,7 +138,10 @@ export function Sidebar({ mode }: SidebarProps) {
       {/* User Profile Footer */}
       <div className="pt-4 border-t border-stone-100">
         <div className="px-3 py-2 bg-stone-50 rounded-xl mb-3 flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-bold text-xs">
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0"
+            style={{ background: 'linear-gradient(135deg, #8B1A2A, #C9952A)' }}
+          >
             {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U'}
           </div>
           <div className="flex-1 min-w-0">
@@ -115,8 +153,9 @@ export function Sidebar({ mode }: SidebarProps) {
         </div>
 
         <button
-          onClick={signOut}
-          className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-xs font-semibold text-stone-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+          id="sidebar-signout-btn"
+          onClick={handleSignOut}
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2.5 text-xs font-semibold text-stone-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
         >
           <LogOut className="w-4 h-4" />
           <span>Sign Out</span>

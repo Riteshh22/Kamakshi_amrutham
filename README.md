@@ -26,8 +26,3 @@ Feedback monitoring
 Complaint management
 Order delivery status updates
 Dashboard statistics and analytics
-💳 Subscription Plans
-Plan	Price
-Daily	₹219
-Monthly	₹5,500
-3 Months	₹15,000
